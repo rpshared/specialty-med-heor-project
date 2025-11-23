@@ -3,11 +3,20 @@
 This log records progress, milestones, issues, and next steps.  
 It’s the single source of truth so I can resume work with ai platforms anytime.
 
+trying to update link recognition
+updated to link to live google sheet
+
 Version 2 
 Version 2 - live table updates based on columns/data in google sheet
 Milestone 1 - Make the website update to table changes
 Milestone 2 - Link to live rxnorm label page
 
+Version - Parking Lot ideas
+Create list of articles for each medication (relevant trials, posters/presentations from ISPOR)
+Review Link --> generate content of (dosing, primary trial) 
+Table structure - what to do if we have multiple indication (multiple indication per cell?) 
+
+now reads just from csv to keep spreadsheet as a live page 
 updated ux to be cleaner, deployed webpage
 site is working via pages, updating with live spreadsheet
 
@@ -21,6 +30,7 @@ Milestone 4 — Tag extraction + filtering  [incomplete, not necessary]
 Milestone 5 — Styling + UX polish  [progressing/complete for initial]
 Milestone 6 — GitHub Pages deployed  [complete]
 Milestone 7 — README + demo script + interview story [complete]
+
 
 
 
