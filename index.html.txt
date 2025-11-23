@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Specialty Meds Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* --- Basic Reset --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f7;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 960px;
+      width: 100%;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+
+    header p {
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .controls {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    select {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      background: #fff;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 18px 18px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      display: flex;
+      gap: 16px;
+    }
+
+    .card__logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 8px;
+      background: #e5e5ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: #555;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .card__logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .card__content {
+      flex: 1;
+    }
+
+    .card__title {
+      margin-bottom: 4px;
+    }
+
+    .card__brand {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .card__generic {
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .card__section {
+      margin-top: 10px;
+    }
+
+    .card__section h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #777;
+      margin-bottom: 2px;
+    }
+
+    .card__section p {
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .tags {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eef0ff;
+      font-size: 0.8rem;
+      color: #333;
+    }
+
+    .hint {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    /* Placeholder for future tag filter UI */
+    .tag-filters {
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: #777;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 16px;
+      }
+
+      .card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .card__logo {
+        width: 56px;
+        height: 56px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Specialty Meds Explorer</h1>
+      <p>A minimal demo to explore specialty / rare medications and their endpoints, RWD outcomes, and PROs.</p>
+    </header>
+
+    <div class="controls">
+      <!-- Placeholder for future tag filter UI -->
+      <div class="tag-filters">
+        <!-- TODO: Milestone 4 – add clickable tag pills to filter the dropdown -->
+        Tag filters coming soon.
+      </div>
+
+      <div>
+        <label for="med-select">Select a medication</label>
+        <select id="med-select">
+          <option value="">-- Select a medication --</option>
+          <!-- Options will be populated by JavaScript -->
+        </select>
+      </div>
+    </div>
+
+    <article class="card" id="med-card">
+      <div class="card__logo" id="med-logo">
+        Logo
+      </div>
+      <div class="card__content">
+        <div class="card__title">
+          <div class="card__brand" id="med-brand">No medication selected</div>
+          <div class="card__generic" id="med-generic">Choose a medication from the dropdown above.</div>
+        </div>
+
+        <div class="card__section">
+          <h3>Indication</h3>
+          <p id="med-indication">–</p>
+        </div>
+
+        <div class="card__section">
+          <h3>Primary endpoints</h3>
+          <p id="med-endpoints">–</p>
+        </div>
+
+        <div class="card__section">
+          <h3>RWD outcomes</h3>
+          <p id="med-rwd">–</p>
+        </div>
+
+        <div class="card__section">
+          <h3>PRO measures</h3>
+          <p id="med-pro">–</p>
+        </div>
+
+        <div class="card__section">
+          <h3>Tags</h3>
+          <div class="tags" id="med-tags">
+            <!-- Tag pills will be inserted here -->
+          </div>
+        </div>
+
+        <p class="hint" id="med-hint">
+          Select a medication to see details.
+        </p>
+      </div>
+    </article>
+  </div>
+
+  <script>
+    // --- Milestone 2: Hardcoded sample data ---
+    // Later, for Milestone 3, we'll replace this with data fetched from Google Sheets.
+
+    const medications = [
+      {
+        id: "drug1",
+        brand_name: "CompleraX",
+        generic_name: "imagolimumab",
+        logo_url: "", // Empty will show placeholder
+        indication: "Treatment of adults with complement-mediated rare kidney disease.",
+        primary_endpoints: "Change in eGFR slope and proteinuria from baseline to Week 52.",
+        rwd_measures: "eGFR slope, proteinuria, hospitalization rate, dialysis initiation.",
+        pro_measures: "KDQOL-36, EQ-5D-5L.",
+        tags: ["renal", "complement"]
+      },
+      {
+        id: "drug2",
+        brand_name: "Neurovia",
+        generic_name: "rnavirsen",
+        logo_url: "",
+        indication: "Adjunctive treatment for drug-resistant focal epilepsy.",
+        primary_endpoints: "Percent reduction in monthly seizure frequency vs placebo.",
+        rwd_measures: "Seizure-related ED visits, hospitalizations, treatment persistence.",
+        pro_measures: "QOLIE-31, seizure diary frequency.",
+        tags: ["epilepsy", "RNAi"]
+      },
+      {
+        id: "drug3",
+        brand_name: "Immuniqo",
+        generic_name: "fcrotuximab",
+        logo_url: "",
+        indication: "Generalized myasthenia gravis (AChR antibody positive).",
+        primary_endpoints: "Change in MG-ADL total score and QMG total score at Week 26.",
+        rwd_measures: "Exacerbation rate, rescue therapy use, steroid-sparing effect.",
+        pro_measures: "MG-ADL, MG-QOL15r, EQ-5D-5L.",
+        tags: ["FcRn", "neurology"]
+      }
+    ];
+
+    const medSelectEl = document.getElementById("med-select");
+    const brandEl = document.getElementById("med-brand");
+    const genericEl = document.getElementById("med-generic");
+    const logoEl = document.getElementById("med-logo");
+    const indicationEl = document.getElementById("med-indication");
+    const endpointsEl = document.getElementById("med-endpoints");
+    const rwdEl = document.getElementById("med-rwd");
+    const proEl = document.getElementById("med-pro");
+    const tagsEl = document.getElementById("med-tags");
+    const hintEl = document.getElementById("med-hint");
+
+    function initDropdown() {
+      medications.forEach(med => {
+        const opt = document.createElement("option");
+        opt.value = med.id;
+        opt.textContent = `${med.brand_name} (${med.generic_name})`;
+        medSelectEl.appendChild(opt);
+      });
+    }
+
+    function renderMedication(med) {
+      if (!med) {
+        // Reset to default state
+        brandEl.textContent = "No medication selected";
+        genericEl.textContent = "Choose a medication from the dropdown above.";
+        logoEl.textContent = "Logo";
+        logoEl.innerHTML = "Logo";
+        indicationEl.textContent = "–";
+        endpointsEl.textContent = "–";
+        rwdEl.textContent = "–";
+        proEl.textContent = "–";
+        tagsEl.innerHTML = "";
+        hintEl.textContent = "Select a medication to see details.";
+        return;
+      }
+
+      brandEl.textContent = med.brand_name;
+      genericEl.textContent = med.generic_name;
+
+      // Handle logo (placeholder if no URL)
+      if (med.logo_url) {
+        logoEl.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = med.logo_url;
+        img.alt = `${med.brand_name} logo`;
+        logoEl.appendChild(img);
+      } else {
+        logoEl.innerHTML = "Logo";
+      }
+
+      indicationEl.textContent = med.indication || "–";
+      endpointsEl.textContent = med.primary_endpoints || "–";
+      rwdEl.textContent = med.rwd_measures || "–";
+      proEl.textContent = med.pro_measures || "–";
+
+      // Render tags as pills
+      tagsEl.innerHTML = "";
+      if (Array.isArray(med.tags) && med.tags.length > 0) {
+        med.tags.forEach(tag => {
+          const pill = document.createElement("span");
+          pill.className = "tag-pill";
+          pill.textContent = tag;
+          tagsEl.appendChild(pill);
+        });
+      }
+
+      hintEl.textContent = "";
+    }
+
+    function onMedSelectChange() {
+      const selectedId = medSelectEl.value;
+      const med = medications.find(m => m.id === selectedId);
+      renderMedication(med || null);
+    }
+
+    // Initial setup
+    initDropdown();
+    renderMedication(null); // default state
+    medSelectEl.addEventListener("change", onMedSelectChange);
+  </script>
+</body>
+</html>
