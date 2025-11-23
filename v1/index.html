@@ -18,7 +18,9 @@
       color: #222;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;   /* stack banner + page vertically */
+      align-items: center;      /* center the .page horizontally */
+      justify-content: flex-start; /* start at top instead of vertical center */
       padding: 24px;
     }
 
