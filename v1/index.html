@@ -288,7 +288,7 @@
   <script>
     // --- Configuration ---
     const SHEET_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRndNpqDuEn0juKL7mMzY4g8YcJXigRzUr_lsSvnjJ_cQXLnwz2gAXMv8j16_Ad1kANgF8Y3oiFRdS5/pub?gid=0&single=true&output=csv";
+      "specialty-med-database - drug_databaseV1_frozen.csv";
 
     // --- State ---
     let allMedications = [];      // full list from sheet
@@ -484,7 +484,7 @@
     // --- Data loading ---
 
     function loadMedicationsFromSheet() {
-      tagFiltersEl.textContent = "Loading medications from Google Sheets…";
+      tagFiltersEl.textContent = "Loading medications from csv…";
 
       Papa.parse(SHEET_URL, {
         download: true,
