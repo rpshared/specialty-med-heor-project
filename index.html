@@ -149,11 +149,30 @@
       margin-top: 8px;
     }
 
-    /* Placeholder for future tag filter UI */
     .tag-filters {
       margin-bottom: 12px;
       font-size: 0.85rem;
       color: #777;
+    }
+
+    .tag-filter-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f0f0f5;
+      font-size: 0.8rem;
+      color: #333;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .tag-filter-pill--active {
+      border-color: #4b5cff;
+      background: #e4e6ff;
+      font-weight: 500;
     }
 
     @media (max-width: 640px) {
@@ -172,6 +191,9 @@
       }
     }
   </style>
+
+  <!-- Papa Parse CDN for robust CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
   <div class="page">
@@ -181,17 +203,15 @@
     </header>
 
     <div class="controls">
-      <!-- Placeholder for future tag filter UI -->
-      <div class="tag-filters">
-        <!-- TODO: Milestone 4 – add clickable tag pills to filter the dropdown -->
-        Tag filters coming soon.
+      <div class="tag-filters" id="tag-filters">
+        <!-- Tag filter pills will be added here -->
+        Loading medications…
       </div>
 
       <div>
         <label for="med-select">Select a medication</label>
-        <select id="med-select">
-          <option value="">-- Select a medication --</option>
-          <!-- Options will be populated by JavaScript -->
+        <select id="med-select" disabled>
+          <option value="">Loading medications…</option>
         </select>
       </div>
     </div>
@@ -241,45 +261,16 @@
   </div>
 
   <script>
-    // --- Milestone 2: Hardcoded sample data ---
-    // Later, for Milestone 3, we'll replace this with data fetched from Google Sheets.
+    // --- Configuration ---
+    const SHEET_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRndNpqDuEn0juKL7mMzY4g8YcJXigRzUr_lsSvnjJ_cQXLnwz2gAXMv8j16_Ad1kANgF8Y3oiFRdS5/pub?gid=0&single=true&output=csv";
 
-    const medications = [
-      {
-        id: "drug1",
-        brand_name: "CompleraX",
-        generic_name: "imagolimumab",
-        logo_url: "", // Empty will show placeholder
-        indication: "Treatment of adults with complement-mediated rare kidney disease.",
-        primary_endpoints: "Change in eGFR slope and proteinuria from baseline to Week 52.",
-        rwd_measures: "eGFR slope, proteinuria, hospitalization rate, dialysis initiation.",
-        pro_measures: "KDQOL-36, EQ-5D-5L.",
-        tags: ["renal", "complement"]
-      },
-      {
-        id: "drug2",
-        brand_name: "Neurovia",
-        generic_name: "rnavirsen",
-        logo_url: "",
-        indication: "Adjunctive treatment for drug-resistant focal epilepsy.",
-        primary_endpoints: "Percent reduction in monthly seizure frequency vs placebo.",
-        rwd_measures: "Seizure-related ED visits, hospitalizations, treatment persistence.",
-        pro_measures: "QOLIE-31, seizure diary frequency.",
-        tags: ["epilepsy", "RNAi"]
-      },
-      {
-        id: "drug3",
-        brand_name: "Immuniqo",
-        generic_name: "fcrotuximab",
-        logo_url: "",
-        indication: "Generalized myasthenia gravis (AChR antibody positive).",
-        primary_endpoints: "Change in MG-ADL total score and QMG total score at Week 26.",
-        rwd_measures: "Exacerbation rate, rescue therapy use, steroid-sparing effect.",
-        pro_measures: "MG-ADL, MG-QOL15r, EQ-5D-5L.",
-        tags: ["FcRn", "neurology"]
-      }
-    ];
+    // --- State ---
+    let allMedications = [];      // full list from sheet
+    let filteredMedications = []; // subset after tag filtering
+    let activeTags = new Set();   // currently selected filter tags
 
+    // --- DOM elements ---
     const medSelectEl = document.getElementById("med-select");
     const brandEl = document.getElementById("med-brand");
     const genericEl = document.getElementById("med-generic");
@@ -290,22 +281,76 @@
     const proEl = document.getElementById("med-pro");
     const tagsEl = document.getElementById("med-tags");
     const hintEl = document.getElementById("med-hint");
+    const tagFiltersEl = document.getElementById("tag-filters");
 
-    function initDropdown() {
-      medications.forEach(med => {
+    // --- Utility functions ---
+
+    function normalizeMedicationRow(row) {
+      // Map CSV row columns into the structure our UI expects
+      // Assumes header row:
+      // id, brand_name, generic_name, logo_url, indication, primary_endpoints, rwd_measures, pro_measures, tags
+      const tagsString = row.tags || row.Tags || "";
+      const tagsArray = tagsString
+        .split(",")
+        .map(t => t.trim())
+        .filter(Boolean);
+
+      return {
+        id: row.id || row.ID || row.Id || "",
+        brand_name: row.brand_name || row.Brand || row.Brand_name || "",
+        generic_name: row.generic_name || row.Generic || row.Generic_name || "",
+        logo_url: row.logo_url || "",
+        indication: row.indication || "",
+        primary_endpoints: row.primary_endpoints || "",
+        rwd_measures: row.rwd_measures || "",
+        pro_measures: row.pro_measures || "",
+        tags: tagsArray
+      };
+    }
+
+    function getUniqueTags(meds) {
+      const tagSet = new Set();
+      meds.forEach(med => {
+        if (Array.isArray(med.tags)) {
+          med.tags.forEach(tag => tagSet.add(tag));
+        }
+      });
+      return Array.from(tagSet).sort();
+    }
+
+    // --- Rendering functions ---
+
+    function renderDropdown() {
+      // Clear existing options
+      medSelectEl.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = activeTags.size > 0
+        ? "-- Select a medication (filtered) --"
+        : "-- Select a medication --";
+      medSelectEl.appendChild(placeholder);
+
+      filteredMedications.forEach(med => {
         const opt = document.createElement("option");
         opt.value = med.id;
-        opt.textContent = `${med.brand_name} (${med.generic_name})`;
+        opt.textContent = med.generic_name
+          ? `${med.brand_name} (${med.generic_name})`
+          : med.brand_name || med.id || "Unknown medication";
         medSelectEl.appendChild(opt);
       });
+
+      medSelectEl.disabled = filteredMedications.length === 0;
+      if (filteredMedications.length === 0) {
+        placeholder.textContent = activeTags.size > 0
+          ? "No medications match the selected tags"
+          : "No medications available";
+      }
     }
 
     function renderMedication(med) {
       if (!med) {
-        // Reset to default state
         brandEl.textContent = "No medication selected";
         genericEl.textContent = "Choose a medication from the dropdown above.";
-        logoEl.textContent = "Logo";
         logoEl.innerHTML = "Logo";
         indicationEl.textContent = "–";
         endpointsEl.textContent = "–";
@@ -316,15 +361,14 @@
         return;
       }
 
-      brandEl.textContent = med.brand_name;
-      genericEl.textContent = med.generic_name;
+      brandEl.textContent = med.brand_name || med.id || "Unknown medication";
+      genericEl.textContent = med.generic_name || "";
 
-      // Handle logo (placeholder if no URL)
       if (med.logo_url) {
         logoEl.innerHTML = "";
         const img = document.createElement("img");
         img.src = med.logo_url;
-        img.alt = `${med.brand_name} logo`;
+        img.alt = `${med.brand_name || "Medication"} logo`;
         logoEl.appendChild(img);
       } else {
         logoEl.innerHTML = "Logo";
@@ -335,7 +379,6 @@
       rwdEl.textContent = med.rwd_measures || "–";
       proEl.textContent = med.pro_measures || "–";
 
-      // Render tags as pills
       tagsEl.innerHTML = "";
       if (Array.isArray(med.tags) && med.tags.length > 0) {
         med.tags.forEach(tag => {
@@ -349,16 +392,122 @@
       hintEl.textContent = "";
     }
 
+    function renderTagFilters() {
+      const uniqueTags = getUniqueTags(allMedications);
+      tagFiltersEl.innerHTML = "";
+
+      if (uniqueTags.length === 0) {
+        tagFiltersEl.textContent = "No tags available (check your sheet’s tags column).";
+        return;
+      }
+
+      const label = document.createElement("div");
+      label.style.marginBottom = "4px";
+      label.textContent = "Filter by tag (click to toggle):";
+      tagFiltersEl.appendChild(label);
+
+      uniqueTags.forEach(tag => {
+        const pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = "tag-filter-pill";
+        pill.textContent = tag;
+        if (activeTags.has(tag)) {
+          pill.classList.add("tag-filter-pill--active");
+        }
+        pill.addEventListener("click", () => {
+          toggleTagFilter(tag);
+        });
+        tagFiltersEl.appendChild(pill);
+      });
+    }
+
+    // --- Tag filter logic ---
+
+    function applyTagFilter() {
+      if (activeTags.size === 0) {
+        filteredMedications = [...allMedications];
+      } else {
+        filteredMedications = allMedications.filter(med => {
+          if (!Array.isArray(med.tags) || med.tags.length === 0) return false;
+          // Include meds that have ALL selected tags
+          return Array.from(activeTags).every(tag => med.tags.includes(tag));
+        });
+      }
+
+      renderDropdown();
+      renderTagFilters();
+      renderMedication(null);
+    }
+
+    function toggleTagFilter(tag) {
+      if (activeTags.has(tag)) {
+        activeTags.delete(tag);
+      } else {
+        activeTags.add(tag);
+      }
+      applyTagFilter();
+    }
+
+    // --- Event handlers ---
+
     function onMedSelectChange() {
       const selectedId = medSelectEl.value;
-      const med = medications.find(m => m.id === selectedId);
+      const med = filteredMedications.find(m => m.id === selectedId);
       renderMedication(med || null);
     }
 
-    // Initial setup
-    initDropdown();
-    renderMedication(null); // default state
-    medSelectEl.addEventListener("change", onMedSelectChange);
+    // --- Data loading ---
+
+    function loadMedicationsFromSheet() {
+      tagFiltersEl.textContent = "Loading medications from Google Sheets…";
+
+      Papa.parse(SHEET_URL, {
+        download: true,
+        header: true, // use first row as header
+        skipEmptyLines: true,
+        complete: function(results) {
+          if (!results.data || results.data.length === 0) {
+            tagFiltersEl.textContent = "No data found in sheet.";
+            console.warn("CSV parsed but no data rows found.", results);
+            return;
+          }
+
+          allMedications = results.data
+            .map(row => normalizeMedicationRow(row))
+            .filter(med => med.id && med.brand_name); // basic sanity filter
+
+          if (allMedications.length === 0) {
+            tagFiltersEl.textContent = "No valid medication rows after parsing.";
+            console.warn("All rows were filtered out as invalid.", results.data);
+            return;
+          }
+
+          filteredMedications = [...allMedications];
+
+          renderDropdown();
+          renderTagFilters();
+          renderMedication(null);
+
+          medSelectEl.disabled = false;
+          medSelectEl.addEventListener("change", onMedSelectChange);
+
+          tagFiltersEl.insertAdjacentHTML(
+            "beforeend",
+            ""
+          );
+
+          console.log("Loaded medications from sheet:", allMedications);
+        },
+        error: function(err) {
+          console.error("Error loading CSV:", err);
+          tagFiltersEl.textContent =
+            "Error loading data from Google Sheets. Check console for details.";
+        }
+      });
+    }
+
+    // --- Init ---
+    loadMedicationsFromSheet();
   </script>
 </body>
 </html>
