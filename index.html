@@ -326,9 +326,24 @@
       };
     }
 
+    // Standard HEOR/RWE section fields we expect in the sheet/JSON.
+    const STANDARD_SECTIONS = [
+      { key: "indication", label: "Indication" },
+      { key: "section_drug_identification", label: "Drug Identification" },
+      { key: "section_disease_context", label: "Disease Context & Epidemiology" },
+      { key: "section_drug_development_timeline", label: "Drug Development & Regulatory Timeline" },
+      { key: "section_clinical_evidence", label: "Clinical Evidence" },
+      { key: "section_heor", label: "HEOR" },
+      { key: "section_rwe", label: "Real-World Evidence" },
+      { key: "section_pros", label: "PROs" },
+      { key: "section_comparative_positioning", label: "Comparative Positioning" },
+      { key: "section_payer_landscape", label: "Payer Landscape" },
+      { key: "section_research_opportunities", label: "Research Opportunities / Trial-to-RWE Gap" }
+    ];
+
     // Columns that we do NOT render as their own sections in the card.
     // These are either used elsewhere in the UI (brand, generic, tags, etc.)
-    // or are purely technical identifiers.
+    // or are rendered via the STANDARD_SECTIONS list above.
     const EXCLUDED_COLUMNS_FOR_DISPLAY = [
       "id",
       "ID",
@@ -348,7 +363,8 @@
       "Logo URL",
       "logo",
       "tags",
-      "Tags"
+      "Tags",
+      ...STANDARD_SECTIONS.map(section => section.key)
     ];
     
     function isLikelyUrl(value) {
@@ -369,6 +385,24 @@
         .filter(Boolean)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
+    }
+
+    function getStandardSections(med) {
+      const raw = med && med.raw ? med.raw : {};
+      return STANDARD_SECTIONS.reduce((sections, section) => {
+        const value = raw[section.key];
+        if (value == null) return sections;
+
+        const text = String(value).trim();
+        if (!text) return sections;
+
+        sections.push({
+          key: section.key,
+          label: section.label,
+          value: text
+        });
+        return sections;
+      }, []);
     }
 
     function getDisplayColumns(med) {
@@ -460,9 +494,10 @@
         logoEl.innerHTML = "Logo";
       }
 
-      // Dynamic sections based on whatever columns are present
+      // Dynamic sections based on standardized schema first, then any extra columns
       dynamicSectionsEl.innerHTML = "";
-      const columns = getDisplayColumns(med);
+      const standardSections = getStandardSections(med);
+      const columns = [...standardSections, ...getDisplayColumns(med)];
 
       if (columns.length === 0) {
         const section = document.createElement("div");
