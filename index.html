@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <title>Specialty Meds Explorer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Sora:wght@400;600&display=swap"
+    rel="stylesheet"
+  >
   <style>
     /* --- Basic Reset --- */
     * {
@@ -13,39 +19,80 @@
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f5f7;
-      color: #222;
+      font-family: "Poppins", "Sora", sans-serif;
+      background: radial-gradient(900px circle at 18% 20%, rgba(111, 205, 255, 0.18), transparent 40%),
+        radial-gradient(900px circle at 80% 5%, rgba(255, 170, 209, 0.14), transparent 35%),
+        linear-gradient(135deg, #fdfdff 0%, #f2f6ff 50%, #eef4ff 100%);
+      color: #1f2a44;
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      padding: 24px;
+      padding: 32px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(520px at 10% 80%, rgba(104, 191, 255, 0.12), transparent 52%),
+        radial-gradient(620px at 90% 60%, rgba(255, 255, 255, 0.6), transparent 40%);
+      filter: blur(24px);
+      z-index: 0;
     }
 
     .page {
+      position: relative;
+      z-index: 1;
       width: 100%;
-      max-width: 960px;
+      max-width: 1100px;
     }
 
     header {
       margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
     }
 
     header h1 {
-      font-size: 1.8rem;
-      margin-bottom: 4px;
+      font-size: 2.2rem;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    header h1 span {
+      color: #1e88e5;
     }
 
     header p {
-      font-size: 0.95rem;
-      color: #555;
+      font-size: 1rem;
+      color: #4a5670;
+      max-width: 640px;
+      line-height: 1.4;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(30, 136, 229, 0.12);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      box-shadow: 0 16px 50px rgba(43, 71, 149, 0.12);
+      padding: 18px 18px;
     }
 
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 14px;
+      margin-bottom: 18px;
+      position: sticky;
+      top: 18px;
+      z-index: 2;
     }
 
     .tag-filters {
@@ -53,25 +100,29 @@
       flex-wrap: wrap;
       gap: 6px;
       font-size: 0.85rem;
-      color: #555;
       align-items: center;
     }
 
     .tag-filter-pill {
+      font-family: "Sora", sans-serif;
       border: none;
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 0.8rem;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
       cursor: pointer;
-      background: #eef2ff;
-      color: #4338ca;
-      transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      background: rgba(30, 136, 229, 0.08);
+      color: #1f2a44;
+      border: 1px solid rgba(30, 136, 229, 0.16);
+      transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      box-shadow: 0 10px 28px rgba(43, 71, 149, 0.08);
     }
 
     .tag-filter-pill--active {
-      background: #4338ca;
-      color: #eef2ff;
-      box-shadow: 0 0 0 1px rgba(67, 56, 202, 0.3);
+      background: linear-gradient(140deg, rgba(30, 136, 229, 0.16), rgba(30, 136, 229, 0.28));
+      color: #0f2d63;
+      border-color: rgba(30, 136, 229, 0.5);
+      box-shadow: 0 16px 30px rgba(30, 136, 229, 0.18);
+      transform: translateY(-2px);
     }
 
     .select-wrapper {
@@ -81,57 +132,93 @@
     }
 
     label {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #555;
-      margin-bottom: 6px;
+      letter-spacing: 0.08em;
+      color: #5b6c8c;
+      margin-bottom: 4px;
     }
 
     select {
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid #ced4ff;
-      font-size: 0.95rem;
-      background: #fff;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(30, 136, 229, 0.16);
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.92);
+      color: #1f2a44;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 14px 40px rgba(43, 71, 149, 0.12);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%231f2a44' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 10px 6px;
     }
 
     select:hover {
-      border-color: #9aa5ff;
-      background-color: #f9f9ff;
+      border-color: rgba(30, 136, 229, 0.65);
+      background-color: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 18px 40px rgba(30, 136, 229, 0.14);
     }
 
     select:focus-visible {
       outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
-      background-color: #fff;
+      border-color: rgba(30, 136, 229, 0.9);
+      box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.22);
+      background-color: rgba(255, 255, 255, 1);
+    }
+
+    a {
+      color: #1e88e5;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(30, 136, 229, 0.35);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    a:hover {
+      color: #0d6fc2;
+      border-color: rgba(13, 111, 194, 0.8);
     }
 
     .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px 18px 18px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.96));
+      border-radius: 18px;
+      padding: 20px 22px 22px;
+      box-shadow: 0 20px 60px rgba(43, 71, 149, 0.16);
       display: flex;
-      gap: 16px;
+      gap: 18px;
+      border: 1px solid rgba(30, 136, 229, 0.12);
+      backdrop-filter: blur(12px);
+      isolation: isolate;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(650px at 10% 20%, rgba(30, 136, 229, 0.1), transparent 45%);
+      z-index: 0;
     }
 
     .card__logo {
-      width: 72px;
-      height: 72px;
-      border-radius: 8px;
-      background: #f4f4f5;
+      width: 76px;
+      height: 76px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid rgba(30, 136, 229, 0.12);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.75rem;
-      color: #555;
+      color: #0f2d63;
       flex-shrink: 0;
       overflow: hidden;
+      box-shadow: 0 12px 30px rgba(43, 71, 149, 0.12);
+      position: relative;
+      z-index: 1;
     }
 
     .card__logo img {
@@ -145,6 +232,8 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      position: relative;
+      z-index: 1;
     }
 
     .card__title {
@@ -152,60 +241,109 @@
     }
 
     .card__brand {
-      font-size: 1.05rem;
-      font-weight: 600;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       margin-bottom: 2px;
+      color: #1f2a44;
     }
 
     .card__generic {
-      font-size: 0.9rem;
-      color: #555;
+      font-size: 0.95rem;
+      color: #5b6c8c;
     }
 
     .card__section {
       margin-top: 8px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(30, 136, 229, 0.02);
+      border: 1px solid rgba(30, 136, 229, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      transition: transform 0.16s ease;
+    }
+
+    .card__section:hover {
+      transform: translateY(-1px);
     }
 
     .card__section h3 {
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #777;
-      margin-bottom: 2px;
+      letter-spacing: 0.06em;
+      color: #3f4f6c;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card__section h3::before {
+      content: "";
+      width: 18px;
+      height: 2px;
+      background: linear-gradient(90deg, #1e88e5 0%, rgba(30, 136, 229, 0) 100%);
+      border-radius: 999px;
     }
 
     .card__section p {
-      font-size: 0.9rem;
-      line-height: 1.35;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #314468;
+    }
+
+    .card__section ul {
+      margin: 6px 0 6px 18px;
+      padding-left: 4px;
+      color: #314468;
+      line-height: 1.5;
+    }
+
+    .card__section dl {
+      margin: 6px 0;
+      color: #314468;
+    }
+
+    .card__section dt {
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .card__section dd {
+      margin: 2px 0 6px 12px;
+      line-height: 1.5;
     }
 
     .tags {
       margin-top: 10px;
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 8px;
     }
 
     .tag-pill {
       display: inline-flex;
       align-items: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: #eef2ff;
-      color: #4338ca;
-      font-size: 0.75rem;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: rgba(30, 136, 229, 0.1);
+      color: #0f2d63;
+      border: 1px solid rgba(30, 136, 229, 0.4);
+      font-size: 0.78rem;
       white-space: nowrap;
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 22px rgba(43, 71, 149, 0.12);
     }
 
     .hint {
       margin-top: 10px;
-      font-size: 0.85rem;
-      color: #666;
+      font-size: 0.92rem;
+      color: #5b6c8c;
     }
 
     @media (max-width: 600px) {
       body {
-        padding: 12px;
+        padding: 16px;
       }
 
       .card {
@@ -214,8 +352,8 @@
       }
 
       .card__logo {
-        width: 56px;
-        height: 56px;
+        width: 64px;
+        height: 64px;
       }
     }
   </style>
@@ -226,11 +364,13 @@
 <body>
   <div class="page">
     <header>
-      <h1>Specialty Meds Explorer</h1>
-      <p>A minimal demo to explore specialty / rare medications and their endpoints, RWD outcomes, and PROs.</p>
+      <div>
+        <h1>Specialty Meds <span>Explorer</span></h1>
+        <p>A sample tool for exploring rare disease treatments / specialty medications and their endpoints, RWD outcomes, and PROs.</p>
+      </div>
     </header>
 
-    <div class="controls">
+    <div class="controls panel">
       <div class="tag-filters" id="tag-filters">
         <!-- Tag filter pills will be added here -->
         Loading medications…
@@ -244,7 +384,7 @@
       </div>
     </div>
 
-    <article class="card" id="med-card">
+    <article class="card panel" id="med-card">
       <div class="card__logo" id="med-logo">
         Logo
       </div>
@@ -258,7 +398,7 @@
           <!-- Dynamic sections based on available columns will be rendered here -->
         </div>
 
-        <div class="card__section">
+        <div class="card__section" id="med-tags-section">
           <h3>Tags</h3>
           <div class="tags" id="med-tags">
             <!-- Tag pills for this medication will be inserted here -->
@@ -274,6 +414,8 @@
 
   <script>
     // --- Configuration ---
+    const USE_AUTO_LISTS = true; // toggle to disable auto list/definition rendering
+    const RUN_FORMATTER_TESTS = false; // set true to log formatter samples to console
     const SHEET_URL =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vRndNpqDuEn0juKL7mMzY4g8YcJXigRzUr_lsSvnjJ_cQXLnwz2gAXMv8j16_Ad1kANgF8Y3oiFRdS5/pub?gid=1458949907&single=true&output=csv";
     // --- State ---
@@ -287,6 +429,7 @@
     const genericEl = document.getElementById("med-generic");
     const logoEl = document.getElementById("med-logo");
     const dynamicSectionsEl = document.getElementById("med-dynamic-sections");
+    const tagsSectionEl = document.getElementById("med-tags-section");
     const tagsEl = document.getElementById("med-tags");
     const hintEl = document.getElementById("med-hint");
     const tagFiltersEl = document.getElementById("tag-filters");
@@ -400,9 +543,80 @@
       return nodes;
     }
 
+    function buildNodesForSegment(segmentText) {
+      const mdNodes = buildMarkdownNodes(segmentText);
+      if (mdNodes) return mdNodes;
+      return [document.createTextNode(segmentText)];
+    }
+
+    function formatTextToNodes(text) {
+      const trimmed = String(text || "").trim();
+      if (!trimmed) return null;
+
+      const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const bulletPattern = /^[-*•]\s+/;
+      const semicolonSegments = trimmed.split(";").map(s => s.trim()).filter(Boolean);
+
+      // Definition list detection: "Label: Value" lines, at least 3 pairs
+      const labeledPairs = lines
+        .map(line => {
+          const idx = line.indexOf(":");
+          if (idx === -1) return null;
+          const key = line.slice(0, idx).trim();
+          const val = line.slice(idx + 1).trim();
+          if (!key || !val) return null;
+          return { key, val };
+        })
+        .filter(Boolean);
+
+      if (labeledPairs.length >= 3) {
+        const dl = document.createElement("dl");
+        labeledPairs.forEach(({ key, val }) => {
+          const dt = document.createElement("dt");
+          dt.textContent = key;
+          const dd = document.createElement("dd");
+          buildNodesForSegment(val).forEach(node => dd.appendChild(node));
+          dl.appendChild(dt);
+          dl.appendChild(dd);
+        });
+        return [dl];
+      }
+
+      const looksLikeBullets = lines.some(line => bulletPattern.test(line));
+      const bulletLines = looksLikeBullets ? lines.map(line => line.replace(bulletPattern, "").trim()).filter(Boolean) : [];
+      const listCandidates =
+        (looksLikeBullets ? bulletLines : []).length >= 3
+          ? bulletLines
+          : semicolonSegments.length >= 3 && semicolonSegments.every(seg => seg.length <= 120)
+          ? semicolonSegments
+          : lines.length >= 3 && lines.every(seg => seg.length <= 160)
+          ? lines
+          : [];
+
+      if (listCandidates.length >= 3) {
+        const ul = document.createElement("ul");
+        listCandidates.forEach(item => {
+          const li = document.createElement("li");
+          buildNodesForSegment(item).forEach(node => li.appendChild(node));
+          ul.appendChild(li);
+        });
+        return [ul];
+      }
+
+      return null;
+    }
+
     function renderValueInto(element, rawValue) {
       const text = String(rawValue || "").trim();
       if (!text) return;
+
+      if (USE_AUTO_LISTS) {
+        const formattedNodes = formatTextToNodes(text);
+        if (formattedNodes && formattedNodes.length > 0) {
+          formattedNodes.forEach(node => element.appendChild(node));
+          return;
+        }
+      }
 
       const markdownNodes = buildMarkdownNodes(text);
       if (markdownNodes) {
@@ -525,6 +739,7 @@
         logoEl.innerHTML = "Logo";
         dynamicSectionsEl.innerHTML = "";
         tagsEl.innerHTML = "";
+        if (tagsSectionEl) tagsSectionEl.style.display = "none";
         hintEl.textContent = "Select a medication to see details.";
         return;
       }
@@ -576,7 +791,11 @@
 
       // Tag pills for this medication
       tagsEl.innerHTML = "";
-      if (Array.isArray(med.tags) && med.tags.length > 0) {
+      const hasTags = Array.isArray(med.tags) && med.tags.length > 0;
+      if (tagsSectionEl) {
+        tagsSectionEl.style.display = hasTags ? "block" : "none";
+      }
+      if (hasTags) {
         med.tags.forEach(tag => {
           const pill = document.createElement("span");
           pill.className = "tag-pill";
@@ -693,12 +912,28 @@
       });
     }
 
+    // --- Formatter smoke tests (console only) ---
+    function runFormatterSmokeTests() {
+      if (!RUN_FORMATTER_TESTS) return;
+      const samples = {
+        "semicolon list": "A; B; C",
+        "newline list": "Line one\nLine two\nLine three",
+        "definition list": "Key: Value\nAnother: Thing\nThird: Item",
+        "paragraph": "Single sentence stays paragraph"
+      };
+
+      console.group("Formatter smoke tests");
+      Object.entries(samples).forEach(([label, sample]) => {
+        const nodes = formatTextToNodes(sample) || [];
+        const summary = nodes.map(n => n.nodeName.toLowerCase()).join(", ");
+        console.log(`${label}:`, summary || "no nodes");
+      });
+      console.groupEnd();
+    }
+
     // --- Init ---
+    runFormatterSmokeTests();
     loadMedicationsFromSheet();
   </script>
 </body>
 </html>
-
-
-
-
