@@ -568,9 +568,12 @@
 
       // Normalize common “JSON-ish” issues: single quotes and smart quotes.
       const smartQuoteFix = trimmed.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, "\"");
+      const trailingCommaFix = str => str.replace(/,\s*([}\]])/g, "$1");
       const attempts = [
         smartQuoteFix,
-        smartQuoteFix.replace(/'([^']*)'/g, "\"$1\"")
+        smartQuoteFix.replace(/'([^']*)'/g, "\"$1\""),
+        trailingCommaFix(smartQuoteFix),
+        trailingCommaFix(smartQuoteFix.replace(/'([^']*)'/g, "\"$1\""))
       ];
 
       for (const attempt of attempts) {
@@ -602,6 +605,43 @@
 
         // Array of objects (e.g., indications with notes/approval dates)
         if (parsed.every(item => item && typeof item === "object" && !Array.isArray(item))) {
+          const hasCitation = parsed.some(entry => entry && (entry.citation || entry.url));
+          if (hasCitation) {
+            const ul = document.createElement("ul");
+            parsed.forEach(entry => {
+              const li = document.createElement("li");
+              const citationText = entry.citation || entry.title || entry.reference || entry.url || "";
+              if (entry.url) {
+                const link = document.createElement("a");
+                link.href = entry.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.textContent = citationText || entry.url;
+                li.appendChild(link);
+              } else if (citationText) {
+                linkifyTextNodes(citationText).forEach(node => li.appendChild(node));
+              }
+              if (entry.category) {
+                const badge = document.createElement("span");
+                badge.style.display = "inline-block";
+                badge.style.marginLeft = "6px";
+                badge.style.padding = "2px 8px";
+                badge.style.borderRadius = "10px";
+                badge.style.background = "rgba(30,136,229,0.08)";
+                badge.style.color = "#1f2a44";
+                badge.style.fontSize = "0.78rem";
+                badge.textContent = entry.category;
+                li.appendChild(badge);
+              }
+              if (!li.textContent.trim() && !li.querySelector("a")) {
+                li.textContent = JSON.stringify(entry);
+              }
+              ul.appendChild(li);
+            });
+            element.appendChild(ul);
+            return true;
+          }
+
           const ul = document.createElement("ul");
           parsed.forEach(entry => {
             const li = document.createElement("li");
@@ -750,12 +790,10 @@
       const looksLikeBullets = lines.some(line => bulletPattern.test(line));
       const bulletLines = looksLikeBullets ? lines.map(line => line.replace(bulletPattern, "").trim()).filter(Boolean) : [];
       const listCandidates =
-        (looksLikeBullets ? bulletLines : []).length >= 3
+        (looksLikeBullets && bulletLines.length >= 3)
           ? bulletLines
-          : semicolonSegments.length >= 3 && semicolonSegments.every(seg => seg.length <= 120)
+          : (semicolonSegments.length >= 3 && semicolonSegments.every(seg => seg.length <= 120))
           ? semicolonSegments
-          : lines.length >= 3 && lines.every(seg => seg.length <= 160)
-          ? lines
           : [];
 
       if (listCandidates.length >= 3) {
