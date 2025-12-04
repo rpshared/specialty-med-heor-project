@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Specialty Meds Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Sora:wght@400;600&display=swap"
+    rel="stylesheet"
+  >
+  <style>
+    /* --- Basic Reset --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", "Sora", sans-serif;
+      background: radial-gradient(900px circle at 18% 20%, rgba(111, 205, 255, 0.18), transparent 40%),
+        radial-gradient(900px circle at 80% 5%, rgba(255, 170, 209, 0.14), transparent 35%),
+        linear-gradient(135deg, #fdfdff 0%, #f2f6ff 50%, #eef4ff 100%);
+      color: #1f2a44;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 32px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(520px at 10% 80%, rgba(104, 191, 255, 0.12), transparent 52%),
+        radial-gradient(620px at 90% 60%, rgba(255, 255, 255, 0.6), transparent 40%);
+      filter: blur(24px);
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    header {
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    header h1 span {
+      color: #1e88e5;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: #4a5670;
+      max-width: 640px;
+      line-height: 1.4;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(30, 136, 229, 0.12);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      box-shadow: 0 16px 50px rgba(43, 71, 149, 0.12);
+      padding: 18px 18px;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 18px;
+      position: sticky;
+      top: 18px;
+      z-index: 2;
+    }
+
+    .tag-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.85rem;
+      align-items: center;
+    }
+
+    .tag-filter-pill {
+      font-family: "Sora", sans-serif;
+      border: none;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      background: rgba(30, 136, 229, 0.08);
+      color: #1f2a44;
+      border: 1px solid rgba(30, 136, 229, 0.16);
+      transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      box-shadow: 0 10px 28px rgba(43, 71, 149, 0.08);
+    }
+
+    .tag-filter-pill--active {
+      background: linear-gradient(140deg, rgba(30, 136, 229, 0.16), rgba(30, 136, 229, 0.28));
+      color: #0f2d63;
+      border-color: rgba(30, 136, 229, 0.5);
+      box-shadow: 0 16px 30px rgba(30, 136, 229, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .select-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #5b6c8c;
+      margin-bottom: 4px;
+    }
+
+    select {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(30, 136, 229, 0.16);
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.92);
+      color: #1f2a44;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 14px 40px rgba(43, 71, 149, 0.12);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%231f2a44' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 10px 6px;
+    }
+
+    select:hover {
+      border-color: rgba(30, 136, 229, 0.65);
+      background-color: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 18px 40px rgba(30, 136, 229, 0.14);
+    }
+
+    select:focus-visible {
+      outline: none;
+      border-color: rgba(30, 136, 229, 0.9);
+      box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.22);
+      background-color: rgba(255, 255, 255, 1);
+    }
+
+    a {
+      color: #1e88e5;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(30, 136, 229, 0.35);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    a:hover {
+      color: #0d6fc2;
+      border-color: rgba(13, 111, 194, 0.8);
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.96));
+      border-radius: 18px;
+      padding: 20px 22px 22px;
+      box-shadow: 0 20px 60px rgba(43, 71, 149, 0.16);
+      display: flex;
+      gap: 18px;
+      border: 1px solid rgba(30, 136, 229, 0.12);
+      backdrop-filter: blur(12px);
+      isolation: isolate;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(650px at 10% 20%, rgba(30, 136, 229, 0.1), transparent 45%);
+      z-index: 0;
+    }
+
+    .card__logo {
+      width: 76px;
+      height: 76px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid rgba(30, 136, 229, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: #0f2d63;
+      flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(43, 71, 149, 0.12);
+      position: relative;
+      z-index: 1;
+    }
+
+    .card__logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .card__content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card__title {
+      margin-bottom: 4px;
+    }
+
+    .card__brand {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 2px;
+      color: #1f2a44;
+    }
+
+    .card__generic {
+      font-size: 0.95rem;
+      color: #5b6c8c;
+    }
+
+    .card__section {
+      margin-top: 8px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(30, 136, 229, 0.02);
+      border: 1px solid rgba(30, 136, 229, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      transition: transform 0.16s ease;
+    }
+
+    .card__section:hover {
+      transform: translateY(-1px);
+    }
+
+    .card__section h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #3f4f6c;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card__section h3::before {
+      content: "";
+      width: 18px;
+      height: 2px;
+      background: linear-gradient(90deg, #1e88e5 0%, rgba(30, 136, 229, 0) 100%);
+      border-radius: 999px;
+    }
+
+    .card__section p {
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #314468;
+    }
+
+    .card__section ul {
+      margin: 6px 0 6px 18px;
+      padding-left: 4px;
+      color: #314468;
+      line-height: 1.5;
+    }
+
+    .card__section dl {
+      margin: 6px 0;
+      color: #314468;
+    }
+
+    .card__section dt {
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .card__section dd {
+      margin: 2px 0 6px 12px;
+      line-height: 1.5;
+    }
+
+    .tags {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: rgba(30, 136, 229, 0.1);
+      color: #0f2d63;
+      border: 1px solid rgba(30, 136, 229, 0.4);
+      font-size: 0.78rem;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 22px rgba(43, 71, 149, 0.12);
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 0.92rem;
+      color: #5b6c8c;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 16px;
+      }
+
+      .card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .card__logo {
+        width: 64px;
+        height: 64px;
+      }
+    }
+  </style>
+
+  <!-- Papa Parse CDN for robust CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Specialty Meds <span>Explorer</span></h1>
+        <p>A sample tool for exploring rare disease treatments / specialty medications and their endpoints, RWD outcomes, and PROs.</p>
+      </div>
+    </header>
+
+    <div class="controls panel">
+      <div class="tag-filters" id="tag-filters">
+        <!-- Tag filter pills will be added here -->
+        Loading medications…
+      </div>
+
+      <div>
+        <label for="med-select">Select a medication</label>
+        <select id="med-select" disabled>
+          <option value="">Loading medications…</option>
+        </select>
+      </div>
+    </div>
+
+    <article class="card panel" id="med-card">
+      <div class="card__logo" id="med-logo">
+        Logo
+      </div>
+      <div class="card__content">
+        <div class="card__title">
+          <div class="card__brand" id="med-brand">No medication selected</div>
+          <div class="card__generic" id="med-generic">Choose a medication from the dropdown above.</div>
+        </div>
+
+        <div id="med-dynamic-sections">
+          <!-- Dynamic sections based on available columns will be rendered here -->
+        </div>
+
+        <div class="card__section" id="med-tags-section">
+          <h3>Tags</h3>
+          <div class="tags" id="med-tags">
+            <!-- Tag pills for this medication will be inserted here -->
+          </div>
+        </div>
+
+        <p class="hint" id="med-hint">
+          Select a medication to see details.
+        </p>
+      </div>
+    </article>
+  </div>
+
+  <script>
+    // --- Configuration ---
+    const USE_AUTO_LISTS = true; // toggle to disable auto list/definition rendering
+    const RUN_FORMATTER_TESTS = false; // set true to log formatter samples to console
+    const SHEET_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRndNpqDuEn0juKL7mMzY4g8YcJXigRzUr_lsSvnjJ_cQXLnwz2gAXMv8j16_Ad1kANgF8Y3oiFRdS5/pub?gid=1458949907&single=true&output=csv";
+    // --- State ---
+    let allMedications = [];      // full list from sheet
+    let filteredMedications = []; // subset after tag filtering
+    let activeTags = new Set();   // currently selected filter tags
+
+    // --- DOM elements ---
+    const medSelectEl = document.getElementById("med-select");
+    const brandEl = document.getElementById("med-brand");
+    const genericEl = document.getElementById("med-generic");
+    const logoEl = document.getElementById("med-logo");
+    const dynamicSectionsEl = document.getElementById("med-dynamic-sections");
+    const tagsSectionEl = document.getElementById("med-tags-section");
+    const tagsEl = document.getElementById("med-tags");
+    const hintEl = document.getElementById("med-hint");
+    const tagFiltersEl = document.getElementById("tag-filters");
+
+    // --- Data normalization ---
+
+    function normalizeMedicationRow(row) {
+      // Map CSV row columns into a structure our UI expects,
+      // but also keep the original row so we can dynamically render
+      // whatever columns are present in the sheet.
+      const tagsString = row.tags || row.Tags || "";
+      const tagsArray = tagsString
+        .split(",")
+        .map(t => t.trim())
+        .filter(Boolean);
+
+      return {
+        // Core identity fields used in the UI
+        id: row.id || row.ID || row.Id || row["Med ID"] || "",
+        brand_name:
+          row.brand_name ||
+          row.Brand ||
+          row.Brand_name ||
+          row["Brand Name"] ||
+          row.Medication ||
+          "",
+        generic_name:
+          row.generic_name ||
+          row.Generic ||
+          row.Generic_name ||
+          row["Generic Name"] ||
+          "",
+        logo_url: row.logo_url || row.Logo || "",
+        tags: tagsArray,
+        // Keep the original row so we can iterate over all columns later
+        raw: row
+      };
+    }
+
+    // Standard HEOR/RWE section fields we expect in the sheet/JSON.
+    const STANDARD_SECTIONS = [
+      { key: "indication", label: "Indication" },
+      { key: "section_drug_identification", label: "Drug Identification" },
+      { key: "section_disease_context", label: "Disease Context & Epidemiology" },
+      { key: "section_drug_development_timeline", label: "Drug Development & Regulatory Timeline" },
+      { key: "section_clinical_evidence", label: "Clinical Evidence" },
+      { key: "section_heor", label: "HEOR" },
+      { key: "section_rwe", label: "Real-World Evidence" },
+      { key: "section_pros", label: "PROs" },
+      { key: "section_comparative_positioning", label: "Comparative Positioning" },
+      { key: "section_payer_landscape", label: "Payer Landscape" },
+      { key: "section_research_opportunities", label: "Research Opportunities / Trial-to-RWE Gap" }
+    ];
+
+    // Columns that we do NOT render as their own sections in the card.
+    // These are either used elsewhere in the UI (brand, generic, tags, etc.)
+    // or are rendered via the STANDARD_SECTIONS list above.
+    const EXCLUDED_COLUMNS_FOR_DISPLAY = [
+      "id",
+      "ID",
+      "Id",
+      "Med ID",
+      "brand_name",
+      "Brand",
+      "Brand_name",
+      "Brand Name",
+      "Medication",
+      "generic_name",
+      "Generic",
+      "Generic_name",
+      "Generic Name",
+      "logo_url",
+      "Logo",
+      "Logo URL",
+      "logo",
+      "tags",
+      "Tags",
+      ...STANDARD_SECTIONS.map(section => section.key)
+    ];
+    
+    function isLikelyUrl(value) {
+      if (!value) return false;
+      const text = String(value).trim();
+      return /^https?:\/\/\S+$/i.test(text);
+    }
+
+    // Render Markdown-style [text](url) links inside freeform text.
+    function buildMarkdownNodes(text) {
+      const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+      const nodes = [];
+      let lastIndex = 0;
+      let match;
+
+      while ((match = pattern.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          nodes.push(document.createTextNode(text.slice(lastIndex, match.index)));
+        }
+        const link = document.createElement("a");
+        link.href = match[2];
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = match[1];
+        nodes.push(link);
+        lastIndex = pattern.lastIndex;
+      }
+
+      if (nodes.length === 0) return null;
+      if (lastIndex < text.length) {
+        nodes.push(document.createTextNode(text.slice(lastIndex)));
+      }
+      return nodes;
+    }
+
+    function buildNodesForSegment(segmentText) {
+      const mdNodes = buildMarkdownNodes(segmentText);
+      if (mdNodes) return mdNodes;
+      return [document.createTextNode(segmentText)];
+    }
+
+    function formatTextToNodes(text) {
+      const trimmed = String(text || "").trim();
+      if (!trimmed) return null;
+
+      const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const bulletPattern = /^[-*•]\s+/;
+      const semicolonSegments = trimmed.split(";").map(s => s.trim()).filter(Boolean);
+
+      // Definition list detection: "Label: Value" lines, at least 3 pairs
+      const labeledPairs = lines
+        .map(line => {
+          const idx = line.indexOf(":");
+          if (idx === -1) return null;
+          const key = line.slice(0, idx).trim();
+          const val = line.slice(idx + 1).trim();
+          if (!key || !val) return null;
+          return { key, val };
+        })
+        .filter(Boolean);
+
+      if (labeledPairs.length >= 3) {
+        const dl = document.createElement("dl");
+        labeledPairs.forEach(({ key, val }) => {
+          const dt = document.createElement("dt");
+          dt.textContent = key;
+          const dd = document.createElement("dd");
+          buildNodesForSegment(val).forEach(node => dd.appendChild(node));
+          dl.appendChild(dt);
+          dl.appendChild(dd);
+        });
+        return [dl];
+      }
+
+      const looksLikeBullets = lines.some(line => bulletPattern.test(line));
+      const bulletLines = looksLikeBullets ? lines.map(line => line.replace(bulletPattern, "").trim()).filter(Boolean) : [];
+      const listCandidates =
+        (looksLikeBullets ? bulletLines : []).length >= 3
+          ? bulletLines
+          : semicolonSegments.length >= 3 && semicolonSegments.every(seg => seg.length <= 120)
+          ? semicolonSegments
+          : lines.length >= 3 && lines.every(seg => seg.length <= 160)
+          ? lines
+          : [];
+
+      if (listCandidates.length >= 3) {
+        const ul = document.createElement("ul");
+        listCandidates.forEach(item => {
+          const li = document.createElement("li");
+          buildNodesForSegment(item).forEach(node => li.appendChild(node));
+          ul.appendChild(li);
+        });
+        return [ul];
+      }
+
+      return null;
+    }
+
+    function renderValueInto(element, rawValue) {
+      const text = String(rawValue || "").trim();
+      if (!text) return;
+
+      if (USE_AUTO_LISTS) {
+        const formattedNodes = formatTextToNodes(text);
+        if (formattedNodes && formattedNodes.length > 0) {
+          formattedNodes.forEach(node => element.appendChild(node));
+          return;
+        }
+      }
+
+      const markdownNodes = buildMarkdownNodes(text);
+      if (markdownNodes) {
+        markdownNodes.forEach(node => element.appendChild(node));
+        return;
+      }
+
+      if (isLikelyUrl(text)) {
+        const link = document.createElement("a");
+        link.href = text;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Open link";
+        element.appendChild(link);
+        return;
+      }
+
+      element.textContent = text;
+    }
+    
+    function formatColumnHeader(columnKey) {
+      const cleaned = String(columnKey || "")
+        .replace(/_/g, " ")
+        .trim();
+
+      if (!cleaned) return "";
+
+      return cleaned
+        .split(" ")
+        .filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }
+
+    function getStandardSections(med) {
+      const raw = med && med.raw ? med.raw : {};
+      return STANDARD_SECTIONS.reduce((sections, section) => {
+        const value = raw[section.key];
+        if (value == null) return sections;
+
+        const text = String(value).trim();
+        if (!text) return sections;
+
+        sections.push({
+          key: section.key,
+          label: section.label,
+          value: text
+        });
+        return sections;
+      }, []);
+    }
+
+    function getDisplayColumns(med) {
+      const raw = med && med.raw ? med.raw : {};
+      const columns = [];
+
+      for (const key in raw) {
+        if (!Object.prototype.hasOwnProperty.call(raw, key)) continue;
+        if (EXCLUDED_COLUMNS_FOR_DISPLAY.includes(key)) continue;
+
+        const value = raw[key];
+        if (value == null) continue;
+
+        const text = String(value).trim();
+        if (!text) continue;
+
+        columns.push({
+          key,
+          label: formatColumnHeader(key),
+          value: text
+        });
+      }
+
+      return columns;
+    }
+
+    function getUniqueTags(meds) {
+      const tagSet = new Set();
+      meds.forEach(med => {
+        if (Array.isArray(med.tags)) {
+          med.tags.forEach(tag => tagSet.add(tag));
+        }
+      });
+      return Array.from(tagSet).sort();
+    }
+
+    // --- Rendering functions ---
+
+    function renderDropdown() {
+      // Clear existing options
+      medSelectEl.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = activeTags.size > 0
+        ? "-- Select a medication (filtered) --"
+        : "-- Select a medication --";
+      medSelectEl.appendChild(placeholder);
+
+      filteredMedications.forEach(med => {
+        const opt = document.createElement("option");
+        opt.value = med.id || med.brand_name;
+        opt.textContent = med.generic_name
+          ? `${med.brand_name} (${med.generic_name})`
+          : med.brand_name || med.id || "Unknown medication";
+        medSelectEl.appendChild(opt);
+      });
+
+      medSelectEl.disabled = filteredMedications.length === 0;
+      if (filteredMedications.length === 0) {
+        placeholder.textContent = activeTags.size > 0
+          ? "No medications match the selected tags"
+          : "No medications available";
+      }
+    }
+
+    function renderMedication(med) {
+      if (!med) {
+        brandEl.textContent = "No medication selected";
+        genericEl.textContent = "Choose a medication from the dropdown above.";
+        logoEl.innerHTML = "Logo";
+        dynamicSectionsEl.innerHTML = "";
+        tagsEl.innerHTML = "";
+        if (tagsSectionEl) tagsSectionEl.style.display = "none";
+        hintEl.textContent = "Select a medication to see details.";
+        return;
+      }
+
+      // Core title area
+      brandEl.textContent = med.brand_name || med.id || "Unknown medication";
+      genericEl.textContent = med.generic_name || "";
+
+      // Logo
+      if (med.logo_url) {
+        logoEl.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = med.logo_url;
+        img.alt = `${med.brand_name || "Medication"} logo`;
+        logoEl.appendChild(img);
+      } else {
+        logoEl.innerHTML = "Logo";
+      }
+
+      // Dynamic sections based on standardized schema first, then any extra columns
+      dynamicSectionsEl.innerHTML = "";
+      const standardSections = getStandardSections(med);
+      const columns = [...standardSections, ...getDisplayColumns(med)];
+
+      if (columns.length === 0) {
+        const section = document.createElement("div");
+        section.className = "card__section";
+        const p = document.createElement("p");
+        p.textContent = "No additional details available for this medication.";
+        section.appendChild(p);
+        dynamicSectionsEl.appendChild(section);
+      } else {
+        columns.forEach(col => {
+          const section = document.createElement("div");
+          section.className = "card__section";
+
+          const heading = document.createElement("h3");
+          heading.textContent = col.label || col.key;
+          section.appendChild(heading);
+
+          const body = document.createElement("p");
+          renderValueInto(body, col.value);
+
+          section.appendChild(body);
+
+          dynamicSectionsEl.appendChild(section);
+        });
+      }
+
+      // Tag pills for this medication
+      tagsEl.innerHTML = "";
+      const hasTags = Array.isArray(med.tags) && med.tags.length > 0;
+      if (tagsSectionEl) {
+        tagsSectionEl.style.display = hasTags ? "block" : "none";
+      }
+      if (hasTags) {
+        med.tags.forEach(tag => {
+          const pill = document.createElement("span");
+          pill.className = "tag-pill";
+          pill.textContent = tag;
+          tagsEl.appendChild(pill);
+        });
+      }
+
+      hintEl.textContent = "";
+    }
+
+    function renderTagFilters() {
+      const uniqueTags = getUniqueTags(allMedications);
+      tagFiltersEl.innerHTML = "";
+
+      if (uniqueTags.length === 0) {
+        tagFiltersEl.textContent = "No tags available (check your sheet’s tags column).";
+        return;
+      }
+
+      const label = document.createElement("div");
+      label.style.marginBottom = "4px";
+      label.textContent = "Filter by tag (click to toggle):";
+      tagFiltersEl.appendChild(label);
+
+      uniqueTags.forEach(tag => {
+        const pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = "tag-filter-pill";
+        pill.textContent = tag;
+        if (activeTags.has(tag)) {
+          pill.classList.add("tag-filter-pill--active");
+        }
+        pill.addEventListener("click", () => {
+          toggleTagFilter(tag);
+        });
+        tagFiltersEl.appendChild(pill);
+      });
+    }
+
+    function toggleTagFilter(tag) {
+      if (activeTags.has(tag)) {
+        activeTags.delete(tag);
+      } else {
+        activeTags.add(tag);
+      }
+
+      if (activeTags.size === 0) {
+        filteredMedications = [...allMedications];
+      } else {
+        filteredMedications = allMedications.filter(med =>
+          med.tags && med.tags.some(t => activeTags.has(t))
+        );
+      }
+
+      renderTagFilters();
+      renderDropdown();
+
+      const selectedId = medSelectEl.value;
+      const med = filteredMedications.find(m =>
+        (m.id || m.brand_name) === selectedId
+      );
+      renderMedication(med || null);
+    }
+
+    // --- Data loading ---
+
+    function loadMedicationsFromSheet() {
+      tagFiltersEl.textContent = "Loading medications from Google Sheets…";
+
+      Papa.parse(SHEET_URL, {
+        download: true,
+        header: true, // use first row as header
+        skipEmptyLines: true,
+        complete: function(results) {
+          if (!results.data || results.data.length === 0) {
+            tagFiltersEl.textContent = "No data found in sheet.";
+            console.warn("CSV parsed but no data rows found.", results);
+            return;
+          }
+
+          allMedications = results.data
+            .map(row => normalizeMedicationRow(row))
+            .filter(med => med.brand_name || med.id); // basic sanity filter
+
+          if (allMedications.length === 0) {
+            tagFiltersEl.textContent = "No valid medication rows after parsing.";
+            console.warn("All rows were filtered out as invalid.", results.data);
+            return;
+          }
+
+          filteredMedications = [...allMedications];
+
+          renderTagFilters();
+          renderDropdown();
+          renderMedication(null);
+
+          tagFiltersEl.textContent = "";
+          medSelectEl.disabled = false;
+
+          medSelectEl.addEventListener("change", () => {
+            const selectedId = medSelectEl.value;
+            const med = filteredMedications.find(m =>
+              (m.id || m.brand_name) === selectedId
+            );
+            renderMedication(med || null);
+          });
+        },
+        error: function(err) {
+          console.error("Error loading CSV:", err);
+          tagFiltersEl.textContent =
+            "Error loading data from Google Sheets. Check console for details.";
+        }
+      });
+    }
+
+    // --- Formatter smoke tests (console only) ---
+    function runFormatterSmokeTests() {
+      if (!RUN_FORMATTER_TESTS) return;
+      const samples = {
+        "semicolon list": "A; B; C",
+        "newline list": "Line one\nLine two\nLine three",
+        "definition list": "Key: Value\nAnother: Thing\nThird: Item",
+        "paragraph": "Single sentence stays paragraph"
+      };
+
+      console.group("Formatter smoke tests");
+      Object.entries(samples).forEach(([label, sample]) => {
+        const nodes = formatTextToNodes(sample) || [];
+        const summary = nodes.map(n => n.nodeName.toLowerCase()).join(", ");
+        console.log(`${label}:`, summary || "no nodes");
+      });
+      console.groupEnd();
+    }
+
+    // --- Init ---
+    runFormatterSmokeTests();
+    loadMedicationsFromSheet();
+  </script>
+</body>
+</html>
