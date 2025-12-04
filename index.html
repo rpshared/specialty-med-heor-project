@@ -517,22 +517,101 @@
     }
 
     function linkifyTextNodes(text) {
-      const urlPattern = /(https?:\/\/[^\s)]+)/gi;
       const nodes = [];
-      text.split(urlPattern).forEach(part => {
-        if (!part) return;
-        if (/^https?:\/\//i.test(part)) {
-          const a = document.createElement("a");
-          a.href = part;
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          a.textContent = part;
-          nodes.push(a);
-        } else {
-          nodes.push(document.createTextNode(part));
+      const urlPattern = /https?:\/\/[^\s<>"']+/gi;
+      let lastIndex = 0;
+      let match;
+
+      while ((match = urlPattern.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          nodes.push(document.createTextNode(text.slice(lastIndex, match.index)));
         }
-      });
-      return nodes;
+        let url = match[0];
+        const trailing = url.match(/[.,);]+$/);
+        if (trailing) {
+          url = url.slice(0, -trailing[0].length);
+        }
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = url;
+        nodes.push(a);
+
+        if (trailing) {
+          nodes.push(document.createTextNode(trailing[0]));
+        }
+        lastIndex = urlPattern.lastIndex;
+      }
+
+      if (lastIndex < text.length) {
+        nodes.push(document.createTextNode(text.slice(lastIndex)));
+      }
+
+      return nodes.length ? nodes : [document.createTextNode(text)];
+    }
+
+    function tryParseJson(text) {
+      const trimmed = String(text || "").trim();
+      if (!trimmed || (trimmed[0] !== "[" && trimmed[0] !== "{")) return null;
+      try {
+        return JSON.parse(trimmed);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function renderJsonValue(element, parsed) {
+      if (Array.isArray(parsed)) {
+        if (parsed.length === 0) return false;
+
+        // Simple array of strings
+        if (parsed.every(item => typeof item === "string")) {
+          const ul = document.createElement("ul");
+          parsed.forEach(item => {
+            const li = document.createElement("li");
+            linkifyTextNodes(item).forEach(node => li.appendChild(node));
+            ul.appendChild(li);
+          });
+          element.appendChild(ul);
+          return true;
+        }
+
+        // Array of objects (e.g., indications with notes/approval dates)
+        if (parsed.every(item => item && typeof item === "object" && !Array.isArray(item))) {
+          const ul = document.createElement("ul");
+          parsed.forEach(entry => {
+            const li = document.createElement("li");
+            const parts = [];
+            if (entry.indication) parts.push(entry.indication);
+            if (entry.approval_date) parts.push(`Approval: ${entry.approval_date}`);
+            if (entry.notes) parts.push(entry.notes);
+            const text = parts.join(" — ") || JSON.stringify(entry);
+            linkifyTextNodes(text).forEach(node => li.appendChild(node));
+            ul.appendChild(li);
+          });
+          element.appendChild(ul);
+          return true;
+        }
+      }
+
+      // Plain object -> definition list
+      if (parsed && typeof parsed === "object") {
+        const dl = document.createElement("dl");
+        Object.entries(parsed).forEach(([key, val]) => {
+          const dt = document.createElement("dt");
+          dt.textContent = formatColumnHeader(key);
+          const dd = document.createElement("dd");
+          renderValueInto(dd, val);
+          dl.appendChild(dt);
+          dl.appendChild(dd);
+        });
+        element.appendChild(dl);
+        return true;
+      }
+
+      return false;
     }
 
     // Render Markdown-style [text](url) links inside freeform text.
@@ -628,6 +707,11 @@
     function renderValueInto(element, rawValue) {
       const text = String(rawValue || "").trim();
       if (!text) return;
+
+      const parsedJson = tryParseJson(text);
+      if (parsedJson && renderJsonValue(element, parsedJson)) {
+        return;
+      }
 
       if (USE_AUTO_LISTS) {
         const formattedNodes = formatTextToNodes(text);
