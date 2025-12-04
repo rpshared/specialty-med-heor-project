@@ -516,6 +516,25 @@
       return /^https?:\/\/\S+$/i.test(text);
     }
 
+    function linkifyTextNodes(text) {
+      const urlPattern = /(https?:\/\/[^\s)]+)/gi;
+      const nodes = [];
+      text.split(urlPattern).forEach(part => {
+        if (!part) return;
+        if (/^https?:\/\//i.test(part)) {
+          const a = document.createElement("a");
+          a.href = part;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = part;
+          nodes.push(a);
+        } else {
+          nodes.push(document.createTextNode(part));
+        }
+      });
+      return nodes;
+    }
+
     // Render Markdown-style [text](url) links inside freeform text.
     function buildMarkdownNodes(text) {
       const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
@@ -546,7 +565,7 @@
     function buildNodesForSegment(segmentText) {
       const mdNodes = buildMarkdownNodes(segmentText);
       if (mdNodes) return mdNodes;
-      return [document.createTextNode(segmentText)];
+      return linkifyTextNodes(segmentText);
     }
 
     function formatTextToNodes(text) {
@@ -624,17 +643,7 @@
         return;
       }
 
-      if (isLikelyUrl(text)) {
-        const link = document.createElement("a");
-        link.href = text;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "Open link";
-        element.appendChild(link);
-        return;
-      }
-
-      element.textContent = text;
+      linkifyTextNodes(text).forEach(node => element.appendChild(node));
     }
     
     function formatColumnHeader(columnKey) {
